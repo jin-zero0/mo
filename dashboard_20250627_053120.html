@@ -1,0 +1,394 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 리트리버 성능 체크 대시보드</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .timestamp {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(145deg, #f8f9ff, #e8eeff);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-left: 5px solid;
+            transition: transform 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .metric-label {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        
+        .metric-sublabel {
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        
+        .chart-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .details-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .detail-item {
+            margin-bottom: 15px;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .detail-value {
+            color: #666;
+            margin-left: 10px;
+        }
+        
+        .grade-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+        
+        .download-section {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        
+        .download-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 10px;
+            background: linear-gradient(145deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 리트리버 성능 체크 대시보드</h1>
+            <div class="timestamp">📅 테스트 일시: 2025년 06월 27일 05:13:40</div>
+        </div>
+        
+        <!-- 핵심 지표 카드 -->
+        <div class="metrics-grid">
+            <div class="metric-card" style="border-left-color: #ffa500">
+                <div class="metric-label">🏆 종합 점수</div>
+                <div class="metric-value" style="color: #ffa500">79.8/100</div>
+                <span class="grade-badge" style="background-color: #ffa500">B+ (양호)</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 79.80704097215772%"></div>
+                </div>
+            </div>
+            
+            <div class="metric-card" style="border-left-color: #4169e1">
+                <div class="metric-label">🎯 정확도</div>
+                <div class="metric-value" style="color: #4169e1">88.0%</div>
+                <div class="metric-sublabel">정확한 매칭률</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 88.0%"></div>
+                </div>
+            </div>
+            
+            <div class="metric-card" style="border-left-color: #2e8b57">
+                <div class="metric-label">⚡ 응답 시간</div>
+                <div class="metric-value" style="color: #2e8b57">165ms</div>
+                <div class="metric-sublabel">평균 검색 시간</div>
+            </div>
+            
+            <div class="metric-card" style="border-left-color: #2e8b57">
+                <div class="metric-label">📊 처리량</div>
+                <div class="metric-value" style="color: #2e8b57">6.1 QPS</div>
+                <div class="metric-sublabel">초당 쿼리 수</div>
+            </div>
+        </div>
+        
+        <!-- 차트 섹션 -->
+        <div class="charts-grid">
+            <div class="chart-container">
+                <div class="chart-title">⚡ 응답 시간 분포</div>
+                <canvas id="responseTimeChart" width="400" height="300"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">🎯 매칭 결과 분포</div>
+                <canvas id="accuracyChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+        
+        <!-- 상세 정보 -->
+        <div class="details-section">
+            <div class="chart-title">📈 상세 분석</div>
+            <div class="details-grid">
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 20px;">💾 시스템 정보</h3>
+                    <div class="detail-item">
+                        <span class="detail-label">총 레코드 수:</span>
+                        <span class="detail-value">10,000개</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">윈도우 수:</span>
+                        <span class="detail-value">34개</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">윈도우 크기:</span>
+                        <span class="detail-value">5분</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">벡터 청크 수:</span>
+                        <span class="detail-value">34개</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">비디오 파일:</span>
+                        <span class="detail-value">videos/demo_retriever_test.mp4</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 20px;">📊 성능 통계</h3>
+                    <div class="detail-item">
+                        <span class="detail-label">최소 응답시간:</span>
+                        <span class="detail-value">50.2ms</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">최대 응답시간:</span>
+                        <span class="detail-value">297.4ms</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">P95 응답시간:</span>
+                        <span class="detail-value">297.4ms</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">정확한 매칭:</span>
+                        <span class="detail-value">44/50 (88.0%)</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">부분 매칭:</span>
+                        <span class="detail-value">5/50</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 다운로드 섹션 -->
+        <div class="download-section">
+            <h3 style="color: #667eea; margin-bottom: 20px;">💾 결과 다운로드</h3>
+            <p>테스트 결과는 output 폴더에 저장되어 있습니다:</p>
+            <a href="#" class="download-btn" onclick="alert('output/demo_results_*.json 파일을 확인하세요!')">📄 JSON 결과</a>
+            <a href="#" class="download-btn" onclick="alert('output/demo_report_*.txt 파일을 확인하세요!')">📑 텍스트 리포트</a>
+        </div>
+    </div>
+
+    <script>
+        // 응답 시간 히스토그램
+        const ctx1 = document.getElementById('responseTimeChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: ['0-50ms', '50-100ms', '100-150ms', '150-200ms', '200-250ms', '250-300ms', '300-350ms'],
+                datasets: [{
+                    label: '쿼리 수',
+                    data: [0, 28, 18, 20, 16, 18, 0],
+                    backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // 정확도 도넛 차트
+        const ctx2 = document.getElementById('accuracyChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['정확한 매칭', '부분 매칭', '매칭 실패'],
+                datasets: [{
+                    data: [44, 5, 1],
+                    backgroundColor: [
+                        '#2e8b57',
+                        '#ffa500', 
+                        '#dc143c'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // 페이지 로드 애니메이션
+        window.addEventListener('load', function() {
+            const cards = document.querySelectorAll('.metric-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.6s ease';
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 200);
+            });
+        });
+    </script>
+</body>
+</html>
